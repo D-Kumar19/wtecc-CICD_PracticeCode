@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: echo
+spec:
+  params:
+    - name: message
+      type: string
+      description: The message to echo
+  steps:
+    - name: echo-message
+      image: alpine:3
+      command:
+        - /bin/echo
+      args:
+        - $(params.message)
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clone-and-checkout
+spec:
+  workspaces:
+    - name: source
+  params:
+    - name: repo-url
+      type: string
+      description: The URL of the repository to clone
+    - name: branch
+      type: string
+      description: The branch to checkout
+  steps:
+    - name: clone
+      image: alpine/git:latest
+      command:
+        - git
+      args:
+        - clone
+        - $(params.repo-url)
+        - $(workspaces.source.path)
+    - name: checkout
+      image: alpine/git:latest
+      workingDir: $(workspaces.source.path)
+      command:
+        - git
+      args:
+        - checkout
+        - $(params.branch)
